@@ -1,5 +1,16 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 /**
+ * User
+ *
+ * @package     Authentic
+ * @subpackage  Libraries
+ * @category	Authentication
+ * @author      Topic Deisgn
+ * @link        https://github.com/topicdesign/codeigniter-authentic-authentication
+ */
+
+/**
+ * Based on:
  *
  * Name:            Authentic
  * Author:          Matthew Machuga
@@ -19,14 +30,68 @@ class Authentic {
     protected $_errors = array();
     protected $_messages = array();
 
-    public function __construct()
+    // --------------------------------------------------------------------
+
+    /**
+     * Constructor
+     *
+     * @access  public
+	 * @param	array	config preferences
+     *
+     * @return  void
+     **/
+    public function __construct($config = array())
     {
         $this->_ci = get_instance();
+        
+		if (count($config) > 0)
+		{
+			$this->initialize($config);
+		}
     }
 
-    public function login($identity, $password, $remember = false, $return_user = false)
+    // --------------------------------------------------------------------
+
+	/**
+	 * Initialize the configuration options
+	 *
+	 * @access	public
+	 * @param	array	config options 
+	 * @return	void
+	 */
+	public function initialize($config = array())
     {
-        $user = User::authenticate($identity, $password, true);
+        foreach ($config as $key => $val)
+        {
+            if (method_exists($this, 'set_'.$key))
+            {
+                $this->{'set_'.$key}($val);
+            }
+            else if (isset($this->$key))
+            {
+                $this->$key = $val;
+            }
+        }
+    }
+
+    // --------------------------------------------------------------------
+
+	/**
+	 * attempt to login with provided credentials
+	 *
+	 * @access	public
+     * @param   mixed   $identity   (int) users.id
+     *                              (string) users.username
+     *                              (string) users.email
+     * @param   string  $password   unencrypted password
+     * @param   bool    $remember   switch setting auto-login
+     * @param   bool    $return     switch return value
+     *
+	 * @return	void
+	 */
+    public function login($identity, $password, $remember = FALSE, $return = FALSE)
+    {
+        $user = User::authenticate($identity, $password, TRUE);
         if ($user)
         {
             $this->_ci->session->set_userdata('user_id', $user->id);
@@ -35,15 +100,25 @@ class Authentic {
                 // Set remember_code and new cookie
             }
             $this->add_message("You've been logged in successfully");
-            return ($return_user) ? $user : true; 
+            return ($return) ? $user : TRUE; 
         }
         else
         {
             $this->add_error("Invalid username or password");
-            return ($return_user) ? null : false;
+            return ($return) ? null : FALSE;
         }
     }
 
+    // --------------------------------------------------------------------
+
+ 	/**
+     * logout user and clear session data
+	 *
+	 * @access	public
+     * @param   void
+     *
+	 * @return	bool
+	 */
     public function logout()
     {
         if ($this->_ci->session->userdata('user_id'))
@@ -55,14 +130,35 @@ class Authentic {
         }
 
         // Kill remember cookies and other data
-        return true;
+        return TRUE;
     }
 
+    // --------------------------------------------------------------------
+
+  	/**
+     * determine if user is authenticated
+	 *
+	 * @access	public
+     * @param   void
+     *
+	 * @return	bool
+	 */
     public function logged_in()
     {
         return (bool) $this->current_user_id();
     }
 
+    // --------------------------------------------------------------------
+    
+  	/**
+     * get users.id for authenticated user
+	 *
+	 * @access	public
+     * @param   void
+     *
+     * @return	mixed   bool
+     *                  integer   users.id
+	 */
     public function current_user_id()
     {
         if ( ! $this->_current_user_id)
@@ -75,6 +171,17 @@ class Authentic {
         return $this->_current_user_id;
     }
 
+    // --------------------------------------------------------------------
+
+  	/**
+     * get ActiveRecord object for authenticated user
+	 *
+	 * @access	public
+     * @param   void
+     *
+     * @return	mixed   bool
+     *                  object   ActiveRecord $user object
+	 */
     public function current_user()
     {
         if ( ! $this->_current_user)
@@ -87,15 +194,35 @@ class Authentic {
         return $this->_current_user; 
     }
 
-    public function add_error($error)
+    // --------------------------------------------------------------------
+
+  	/**
+     * set an error message 
+	 *
+	 * @access	private
+     * @param   string  $error  text of error message
+     *
+     * @return	void
+	 */
+    private function add_error($error)
     {
         if (trim($error) != '')
         {
             $this->_errors[] = $error;
         }
     }
-    
-    public function add_message($msg)
+
+    // --------------------------------------------------------------------
+
+    /**
+     * set a message 
+	 *
+	 * @access	private
+     * @param   string  $error  text of message
+     *
+     * @return	void
+	 */
+    private function add_message($msg)
     {
         if (trim($msg) != '')
         {
@@ -103,16 +230,37 @@ class Authentic {
         }
     }
 
+    // --------------------------------------------------------------------
+
+    /**
+     * get array of error messages
+	 *
+	 * @access	public
+     * @param   void
+     *
+     * @return	array  error message strings
+	 */
     public function get_errors()
     {
         return $this->_errors;
     }
 
+    // --------------------------------------------------------------------
+
+    /**
+     * get array of messages 
+	 *
+	 * @access	public
+     * @param   void
+     *
+     * @return	array   message strings
+	 */
     public function get_messages()
     {
         return $this->_messages;
     }
 
+    // --------------------------------------------------------------------
 
 }
 /* End of file Authority.php */
