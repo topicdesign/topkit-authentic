@@ -43,7 +43,10 @@ class Authentic {
     public function __construct($config = array())
     {
         $this->_ci = get_instance();
-        
+
+        $this->_ci->lang->load('authentic');
+        $this->_ci->load->helper('language');
+
         if (count($config) > 0)
         {
             $this->initialize($config);
@@ -99,12 +102,12 @@ class Authentic {
             {
                 // Set remember_code and new cookie
             }
-            $this->add_message("You've been logged in successfully");
+            $this->add_message(lang('logged_in'));
             return ($return) ? $user : TRUE; 
         }
         else
         {
-            $this->add_error("Invalid username or password");
+            $this->add_error(lang('invalid_credentials'));
             return ($return) ? null : FALSE;
         }
     }
@@ -126,7 +129,7 @@ class Authentic {
             $this->_ci->session->unset_userdata('user_id');
             $this->_current_user_id = null;
             $this->_current_user = null;
-            $this->add_message("You've been logged out successfully");
+            $this->add_message(lang('logged_out'));
         }
 
         // Kill remember cookies and other data
@@ -226,7 +229,7 @@ class Authentic {
     {
         if (trim($msg) != '')
         {
-            $this->_message[] = $msg;
+            $this->_messages[] = $msg;
         }
     }
 
