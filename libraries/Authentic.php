@@ -46,6 +46,7 @@ class Authentic {
 
         $this->_ci->lang->load('authentic');
         $this->_ci->load->helper('language');
+        $this->_ci->load->helper('authentic');
 
         if (count($config) > 0)
         {
