@@ -4,7 +4,7 @@
  *
  * @package     Authentic
  * @subpackage  Libraries
- * @category	Authentication
+ * @category    Authentication
  * @author      Topic Deisgn
  * @link        https://github.com/topicdesign/codeigniter-authentic-authentication
  */
@@ -36,7 +36,7 @@ class Authentic {
      * Constructor
      *
      * @access  public
-	 * @param	array	config preferences
+     * @param   array   config preferences
      *
      * @return  void
      **/
@@ -44,22 +44,22 @@ class Authentic {
     {
         $this->_ci = get_instance();
         
-		if (count($config) > 0)
-		{
-			$this->initialize($config);
-		}
+        if (count($config) > 0)
+        {
+            $this->initialize($config);
+        }
     }
 
     // --------------------------------------------------------------------
 
-	/**
-	 * Initialize the configuration options
-	 *
-	 * @access	public
-	 * @param	array	config options 
-	 * @return	void
-	 */
-	public function initialize($config = array())
+    /**
+     * Initialize the configuration options
+     *
+     * @access  public
+     * @param   array	config options 
+     * @return  void
+     */
+    public function initialize($config = array())
     {
         foreach ($config as $key => $val)
         {
@@ -76,10 +76,10 @@ class Authentic {
 
     // --------------------------------------------------------------------
 
-	/**
-	 * attempt to login with provided credentials
-	 *
-	 * @access	public
+    /**
+     * attempt to login with provided credentials
+     *
+     * @access  public
      * @param   mixed   $identity   (int) users.id
      *                              (string) users.username
      *                              (string) users.email
@@ -87,8 +87,8 @@ class Authentic {
      * @param   bool    $remember   switch setting auto-login
      * @param   bool    $return     switch return value
      *
-	 * @return	void
-	 */
+     * @return  void
+     */
     public function login($identity, $password, $remember = FALSE, $return = FALSE)
     {
         $user = User::authenticate($identity, $password, TRUE);
@@ -111,14 +111,14 @@ class Authentic {
 
     // --------------------------------------------------------------------
 
- 	/**
+    /**
      * logout user and clear session data
-	 *
-	 * @access	public
+     *
+     * @access  public
      * @param   void
      *
-	 * @return	bool
-	 */
+     * @return  bool
+     */
     public function logout()
     {
         if ($this->_ci->session->userdata('user_id'))
@@ -135,14 +135,14 @@ class Authentic {
 
     // --------------------------------------------------------------------
 
-  	/**
+    /**
      * determine if user is authenticated
-	 *
-	 * @access	public
+     *
+     * @access  public
      * @param   void
      *
-	 * @return	bool
-	 */
+     * @return  bool
+     */
     public function logged_in()
     {
         return (bool) $this->current_user_id();
@@ -150,15 +150,15 @@ class Authentic {
 
     // --------------------------------------------------------------------
     
-  	/**
+    /**
      * get users.id for authenticated user
-	 *
-	 * @access	public
+     *
+     * @access  public
      * @param   void
      *
-     * @return	mixed   bool
+     * @return  mixed   bool
      *                  integer   users.id
-	 */
+     */
     public function current_user_id()
     {
         if ( ! $this->_current_user_id)
@@ -173,15 +173,15 @@ class Authentic {
 
     // --------------------------------------------------------------------
 
-  	/**
+    /**
      * get ActiveRecord object for authenticated user
-	 *
-	 * @access	public
+     *
+     * @access  public
      * @param   void
      *
-     * @return	mixed   bool
+     * @return  mixed   bool
      *                  object   ActiveRecord $user object
-	 */
+     */
     public function current_user()
     {
         if ( ! $this->_current_user)
@@ -196,14 +196,14 @@ class Authentic {
 
     // --------------------------------------------------------------------
 
-  	/**
+    /**
      * set an error message 
-	 *
-	 * @access	private
+     *
+     * @access  private
      * @param   string  $error  text of error message
      *
-     * @return	void
-	 */
+     * @return  void
+     */
     private function add_error($error)
     {
         if (trim($error) != '')
@@ -216,12 +216,12 @@ class Authentic {
 
     /**
      * set a message 
-	 *
-	 * @access	private
+     *
+     * @access  private
      * @param   string  $error  text of message
      *
-     * @return	void
-	 */
+     * @return  void
+     */
     private function add_message($msg)
     {
         if (trim($msg) != '')
@@ -234,12 +234,12 @@ class Authentic {
 
     /**
      * get array of error messages
-	 *
-	 * @access	public
+     *
+     * @access  public
      * @param   void
      *
-     * @return	array  error message strings
-	 */
+     * @return  array  error message strings
+     */
     public function get_errors()
     {
         return $this->_errors;
@@ -249,12 +249,12 @@ class Authentic {
 
     /**
      * get array of messages 
-	 *
-	 * @access	public
+     *
+     * @access  public
      * @param   void
      *
-     * @return	array   message strings
-	 */
+     * @return  array   message strings
+     */
     public function get_messages()
     {
         return $this->_messages;
@@ -265,4 +265,3 @@ class Authentic {
 }
 /* End of file Authority.php */
 /* Location: ./application/libraries/Authority.php */
-

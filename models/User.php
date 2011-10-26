@@ -4,7 +4,7 @@
  *
  * @package     Authentic
  * @subpackage  Models
- * @category	Authentication
+ * @category    Authentication
  * @author      Topic Deisgn
  * @link        https://github.com/topicdesign/codeigniter-authentic-authentication
  */
@@ -129,7 +129,6 @@ class User extends ActiveRecord\Model {
         $type = 'find_by_'.static::identity_type($identity);
         return ($type === 'find_by_id' && ! $allow_id) ? FALSE : self::$type($identity);
     }
-
 
     // --------------------------------------------------------------------
     // Private Methods
