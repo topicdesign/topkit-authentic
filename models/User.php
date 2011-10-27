@@ -1,4 +1,9 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+namespace Authentic;
+
+if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
 /**
  * User
  *
@@ -22,7 +27,8 @@
  *
  */
 
-class User extends ActiveRecord\Model {
+
+class User extends \ActiveRecord\Model {
 
     # explicit table name  
     //static $table_name = 'users';
@@ -39,11 +45,11 @@ class User extends ActiveRecord\Model {
     // --------------------------------------------------------------------
     // Associations
     // --------------------------------------------------------------------
-    
+
     // --------------------------------------------------------------------
     // Validations
     // --------------------------------------------------------------------
-    
+
     // --------------------------------------------------------------------
     // Setters/Getters
     // --------------------------------------------------------------------
@@ -88,8 +94,7 @@ class User extends ActiveRecord\Model {
      * try to authenticate user from provided credentials
      *
      * @access  public
-     * @param   mixed   $identity   (int) users.id
-     *                              (string) users.username
+     * @param   mixed   $identity   (string) users.username
      *                              (string) users.email
      * @param   string  $password   unencrypted password
      * @param   bool    $return     switch return value
@@ -100,14 +105,79 @@ class User extends ActiveRecord\Model {
     public static function authenticate($identity, $password, $return = FALSE)
     {
         $user = static::find_user($identity, FALSE);
-        if ($user && $user->password === static::hash_value($password, $user->salt))
+        $hash = static::hash_value($password, $user->salt);
+
+        if ( ! $user OR $user->password !== $hash)
         {
-            return ($return) ? $user : TRUE;
+            return ($return) ? NULL : FALSE;
         }
-        else 
+
+        return ($return) ? $user : TRUE;
+    }
+
+    // --------------------------------------------------------------------
+
+    /**
+     * mark user inactive, and set activation code
+     *
+     * @access  public
+     * @param   mixed   $identity   (int) users.id
+     *                              (string) users.username
+     *                              (string) users.email
+     *
+     * @return  mixed   bool        (default)
+     *                  object      ActiveRecord $user object
+     **/
+    public static function inactivate($identity, $return = FALSE)
+    {
+        $user = static::find_user($identity);
+        if ( ! $user)
         {
-            return ($return) ? null : FALSE;
+            return ($return) ? NULL : TRUE;
         }
+
+        $user->assign_attribute('active', FALSE);
+        $code = $user->hash_value(microtime());
+        $user->activation_code = substr($code, 0, 32);
+
+        if ( ! $user->save())
+        {
+            // catch error
+        }
+        return ($return) ? $user : TRUE;
+    }
+
+    // --------------------------------------------------------------------
+
+    /**
+     * validate code and mark user active
+     *
+     * @access  public
+     * @param   mixed   $identity   (int) users.id
+     *                              (string) users.username
+     *                              (string) users.email
+     * @param   string  $code       users.activation_code
+     * @param   bool    $return     switch return value
+     *
+     * @return  mixed   bool        (default)
+     *                  object      ActiveRecord $user object
+     **/
+    public static function activate($identity, $code, $return = FALSE)
+    {
+        $user = static::find_user($identity);
+        if ($user->activation_code !== $code)
+        {
+            return ($return) ? FALSE : NULL;
+        }
+
+        $user->assign_attribute('active', TRUE);
+        $user->activation_code = NULL;
+
+        if ( ! $user->save())
+        {
+            // catch error
+        }
+        return ($return) ? $user : TRUE;
     }
 
     // --------------------------------------------------------------------
@@ -121,17 +191,20 @@ class User extends ActiveRecord\Model {
      *                              (string) users.email
      * @param   bool    $allow_id   allow lookup based on users.id
      *
-     * @return  mixed   bool 
-     *                  object      ActiveRecord $user object
+     * @return  object  ActiveRecord $user object
      **/
     public static function find_user($identity, $allow_id = TRUE)
     {
         $type = 'find_by_'.static::identity_type($identity);
-        return ($type === 'find_by_id' && ! $allow_id) ? FALSE : self::$type($identity);
+        if ($type === 'find_by_id' && ! $allow_id)
+        {
+            return FALSE;
+        }
+        return self::$type($identity);
     }
 
     // --------------------------------------------------------------------
-    // Private Methods
+    // Private/Protected Methods
     // --------------------------------------------------------------------
 
     /**

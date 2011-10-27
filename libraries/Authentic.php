@@ -1,6 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 /**
- * User
+ * Authentic
  *
  * @package     Authentic
  * @subpackage  Libraries
@@ -29,6 +29,8 @@ class Authentic {
     protected $_current_user = null;
     protected $_errors = array();
     protected $_messages = array();
+
+    protected $allow_auto_login = TRUE;
 
     // --------------------------------------------------------------------
 
@@ -60,7 +62,7 @@ class Authentic {
      * Initialize the configuration options
      *
      * @access  public
-     * @param   array	config options 
+     * @param   array   config options 
      * @return  void
      */
     public function initialize($config = array())
@@ -84,18 +86,17 @@ class Authentic {
      * attempt to login with provided credentials
      *
      * @access  public
-     * @param   mixed   $identity   (int) users.id
-     *                              (string) users.username
-     *                              (string) users.email
+     * @param   string  $identity   users.username or users.email
      * @param   string  $password   unencrypted password
      * @param   bool    $remember   switch setting auto-login
      * @param   bool    $return     switch return value
      *
-     * @return  void
+     * @return  mixed   bool        (default)
+     *                  object      ActiveRecord $user object
      */
     public function login($identity, $password, $remember = FALSE, $return = FALSE)
     {
-        $user = User::authenticate($identity, $password, TRUE);
+        $user = Authentic\User::authenticate($identity, $password, TRUE);
         if ($user)
         {
             $this->_ci->session->set_userdata('user_id', $user->id);
@@ -111,6 +112,22 @@ class Authentic {
             $this->add_error(lang('invalid_credentials'));
             return ($return) ? null : FALSE;
         }
+    }
+
+    // --------------------------------------------------------------------
+
+    /**
+     * attempt to auto_login
+     *
+     * @access  public
+     * @param   void
+     *
+     * @return  bool
+     **/
+    public function auto_login()
+    {
+        // todo
+        return TRUE;
     }
 
     // --------------------------------------------------------------------
@@ -140,16 +157,77 @@ class Authentic {
     // --------------------------------------------------------------------
 
     /**
-     * determine if user is authenticated
+     * set user to active status
      *
      * @access  public
-     * @param   void
+     * @param   mixed   $identity   (object) Authentic\User\ActiveRecord\Model
+     *                              (int) users.id
+     *                              (string) users.username
+     *                              (string) users.email
+     * @param   string  $identity   users.username or users.email
+     * @param   string  $code       users.activation_code
+     * @param   bool    $return     switch to return user object
+     *
+     * @return  mixed   bool        (default)
+     *                  object      ActiveRecord $user object
+     **/
+    public function activate($identity, $code, $return = FALSE)
+    {
+        if ($identity instanceof ActiveRecord\Model)
+        {
+            $identity = $identity->id;
+        }
+        return Authentic\User::activate($identity, $code, $return);
+    }
+
+    // --------------------------------------------------------------------
+
+    /**
+     * set user to inactive status
+     *
+     * @access  public
+     * @param   mixed   $identity   (object) Authentic\User\ActiveRecord\Model
+     *                              (int) users.id
+     *                              (string) users.username
+     *                              (string) users.email
+     *
+     * @return  string  32 character activation code
+     **/
+    public function inactivate($identity)
+    {
+        if ($identity instanceof ActiveRecord\Model)
+        {
+            $identity = $identity->id;
+        }
+        $user = Authentic\User::inactivate($identity, TRUE);
+
+        return ($user) ? $user->activation_code : FALSE;
+    }
+
+    // --------------------------------------------------------------------
+
+    /**
+     * determine if user is authenticated
+     *   auto-login if allowed
+     *
+     * @access  public
+     * @param   bool    $auto_login     allow attempt to auto-login
      *
      * @return  bool
      */
-    public function logged_in()
+    public function logged_in($auto_login = NULL)
     {
-        return (bool) $this->current_user_id();
+        if ($auto_login === NULL)
+        {
+            $auto_login = $this->allow_auto_login;
+        }
+
+        $logged_in = (bool) $this->current_user_id();
+        if ( ! $logged_in && $auto_login)
+        {
+            return $this->auto_login();
+        }
+        return $logged_in;
     }
 
     // --------------------------------------------------------------------
@@ -192,7 +270,7 @@ class Authentic {
         {
             if ($this->current_user_id())
             {
-                $this->_current_user = User::find_by_id($this->current_user_id());
+                $this->_current_user = Authentic\User::find_by_id($this->current_user_id());
             }
         }
         return $this->_current_user; 
@@ -219,7 +297,7 @@ class Authentic {
     // --------------------------------------------------------------------
 
     /**
-     * set a message 
+     * set a message
      *
      * @access  private
      * @param   string  $error  text of message
@@ -252,7 +330,7 @@ class Authentic {
     // --------------------------------------------------------------------
 
     /**
-     * get array of messages 
+     * get array of messages
      *
      * @access  public
      * @param   void
