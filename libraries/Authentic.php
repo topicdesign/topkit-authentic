@@ -127,7 +127,7 @@ class Authentic {
     public function auto_login()
     {
         // todo
-        return TRUE;
+        return FALSE;
     }
 
     // --------------------------------------------------------------------

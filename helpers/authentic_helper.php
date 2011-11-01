@@ -26,14 +26,21 @@ if ( ! function_exists('get_user'))
 	function get_user()
     {
         $CI = get_instance();
-        if ( ! isset($CI->app)) {
-            $CI->app = new stdClass;
+        if (function_exists('get_app'))
+        {
+            $obj = get_app();
         }
-        if ( ! isset($CI->app->user)) {
+        else
+        {
+            $obj = get_instance();
+        }
+        
+        if ( ! isset($obj->user))
+        {
             $CI->load->library('authentic');
-            $CI->app->user = $CI->authentic->current_user();
+            $obj->user = $CI->authentic->current_user();
         }
-        return $CI->app->user;
+        return $obj->user;
 	}
 }
 
