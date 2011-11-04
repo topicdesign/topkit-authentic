@@ -74,44 +74,6 @@ class User extends \ActiveRecord\Model {
     // --------------------------------------------------------------------
 
     /**
-     * set (unique) nonce property with expiration
-     *
-     * @access  public
-     * @param   object  $expire     DateTime object to expire nonce
-     *
-     * @return  void
-     **/
-    public function set_nonce($expire)
-    {
-        if (is_null($expire))
-        {
-            die('null');
-        }
-        die('not null');
-        if ( ! $expire instanceof \DateTime)
-        {
-            $expire = date_create()->modify('+1 week');
-        }
-
-        // create unique 32 character nonce
-        $nonce = substr($this->hash_value(microtime()), 0, 32);
-        $test = static::first(array('conditions'=>array(
-            'nonce = ?',
-            $nonce
-        )));
-        if ($test)
-        {
-            $this->nonce = $expire;
-            return;
-        }
-
-        $this->nonce_expire = $expire;
-        $this->assign_attribute('nonce', $nonce);
-    }
-
-    // --------------------------------------------------------------------
-
-    /**
      * get remember_code property
      *   generate and save if not present
      *
@@ -183,37 +145,6 @@ class User extends \ActiveRecord\Model {
 
         return ($return) ? $user : TRUE;
     }
-
-
-    // --------------------------------------------------------------------
-
-    /**
-     * validate nonce and replace if valid
-     *
-     * @access  public
-     * @param   string  $nonce  nonce to check
-     *
-     * @return  mixed   object  ActiveRecord user object
-     *                  bool    FALSE if invalid
-     **/
-    //public function validate_nonce($nonce)
-    //{
-        //$user = User::first(array('conditions' => array(
-            //'nonce = ? AND nonce_expire > UTC_TIMESTAMP()',
-            //$nonce,
-        //)));
-        //if ( ! $user)
-        //{
-            //return FALSE;
-        //}
-        //$user->nonce = $user->hash_value(microtime());
-        //$user->nonce_expire = date_create()->modify('+1 week');
-        //if ( ! $user->save())
-        //{
-            //// catch error
-        //}
-        //return $user;
-    //}
 
     // --------------------------------------------------------------------
 
