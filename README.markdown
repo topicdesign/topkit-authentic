@@ -2,7 +2,14 @@ Authentic Authentication for CodeIgniter
 =======================================
 
 Authentic is an authentication library that provides a persistent user 
-to the [CodeIgniter][1] framework. It requires **PHP 5.3.x** and [PHPActiveRecord][2]
+to the [CodeIgniter][1] framework. It requires:
+
+* **PHP 5.3.x**
+* [PHPActiveRecord][2].
+
+The package automates securely hashing passwords, and provides an interface 
+to *nonce* records used authenticate visitors via 'remember me' cookies or 
+activation codes that can be passed in plain text.
 
 [1]: http://codeigniter.com
 [2]: http://phpactiverecord.com
@@ -36,19 +43,26 @@ The login method accepts *email* or *username* and a *password*.
     // you can also get the user object returned instead of BOOL
     $user = $this->authentic->login('foo', 'password', NULL, TRUE);
 
-You can determine if the current user is logged in. If __var__ set, 
-the user will be auto-logged in.
+You can determine if the current user is logged in. You can set a config
+option to attempt to auto-login.
 
     $this->authentic->logged_in();
 
-    // you can explicitly ignore auto-login by passing FALSE
+    // you can override the config auto-login option by passing TRUE/FALSE
     $this->authentic->logged_in(FALSE);
 
-Logging out clears your user session, and removes cookies
+Logging out clears your user session, and removes session cookies. You can 
+set a config option to also delete 'remember me' cookies.
 
     $this->authentic->logout();
 
+    // you can override the config option by passing TRUE/FALSE
+    $this->authentic->logout(TRUE);
+
+
 ### Activate/Inactivate
+
+**FPO: basic working model, but needs work. will convert to use nonce entries.**
 
 You can get an activation code and set a user to inactive state. Inactive users 
 can not login by default (see configuration).
@@ -60,6 +74,17 @@ can not login by default (see configuration).
 ### Create Users
 
 TBD
+
+I am not sure if I will include user creation as part of the package, 
+or leave that for a per-application implementation. Currently, you can 
+simply use the standard ActiveRecord method.
+
+    $attributes = array(
+        'email'     => 'foo@example.com',
+        'username'  => 'foo',
+        'password'  => 'plaintext'
+    );
+    $user = Authentic\User::create($attributes);
 
 
 Configuration
@@ -79,7 +104,24 @@ when loading, or via an **initialize()** method.
 
 ### Configuration options
 
-TBD
+Should the library attempt to auto-login user when checking if user
+is currently logged in?
+
+    $config['allow_auto_login'] = TRUE;
+
+How long should 'remember me' cookies work? Accepts string formats
+supported by [DateTime::modify()](http://www.php.net/manual/datetime.modify.php).
+
+    $config['cookie_length'] = '+10 days';
+
+Name of the 'remember me' cookie. *Will use CI cookie prefix if set globally.*
+
+    $config['cookie_name'] = 'authenticRemember';
+
+Should calling **logout()** clear the 'remember me' cookie?
+
+    $config['clear_remember'] = TRUE;
+
 
 Credit
 ------

@@ -31,6 +31,9 @@ class Authentic {
     protected $_messages = array();
 
     protected $allow_auto_login = TRUE;
+    protected $cookie_length = '+10 days';
+    protected $cookie_name = 'authenticRemember';
+    protected $clear_remember = TRUE;
 
     // --------------------------------------------------------------------
 
@@ -97,21 +100,13 @@ class Authentic {
     public function login($identity, $password, $remember = FALSE, $return = FALSE)
     {
         $user = Authentic\User::authenticate($identity, $password, TRUE);
-        if ($user)
-        {
-            $this->_ci->session->set_userdata('user_id', $user->id);
-            if ($remember)
-            {
-                // Set remember_code and new cookie
-            }
-            $this->add_message(lang('logged_in'));
-            return ($return) ? $user : TRUE; 
-        }
-        else
+        if ( ! $user)
         {
             $this->add_error(lang('invalid_credentials'));
             return ($return) ? null : FALSE;
         }
+        $this->set_session($user, $remember);
+        return ($return) ? $user : TRUE; 
     }
 
     // --------------------------------------------------------------------
@@ -126,8 +121,33 @@ class Authentic {
      **/
     public function auto_login()
     {
-        // todo
-        return FALSE;
+        // is cookie present and nonce exists
+        $code = $this->get_nonce_from_cookie();
+        if ( ! $code OR ! Authentic\Nonce::exists($code))
+        {
+            return FALSE;
+        }
+
+        // get nonce and user, delete used nonce
+        $nonce = Authentic\Nonce::find($code, array('include'=>array('user')));
+        $nonce->delete();
+
+        // is nonce expired
+        if ($nonce->expire_at->format('U') < date_create()->format('U'))
+        {
+            $cookie = array(
+                'name'   => $this->cookie_name,
+                'value'  => '',
+                'expire' => '',
+            );
+            $this->_ci->input->set_cookie($cookie);
+
+            $this->add_error(lang('expired_cookie'));
+            return FALSE;
+        }
+
+        $this->set_session($nonce->user, TRUE);
+        return TRUE;
     }
 
     // --------------------------------------------------------------------
@@ -136,21 +156,43 @@ class Authentic {
      * logout user and clear session data
      *
      * @access  public
-     * @param   void
+     * @param   bool    $clear  override $this->clear_remember
      *
      * @return  bool
      */
-    public function logout()
+    public function logout($clear=NULL)
     {
+        if (is_null($clear) || ! is_bool($clear))
+        {
+            $clear = $this->clear_remember;
+        }
+
         if ($this->_ci->session->userdata('user_id'))
         {
             $this->_ci->session->unset_userdata('user_id');
             $this->_current_user_id = null;
             $this->_current_user = null;
             $this->add_message(lang('logged_out'));
-        }
+            
+            if ($clear)
+            {
+                // remove stored nonce
+                $code = $this->get_nonce_from_cookie();
+                if ($code && Authentic\Nonce::exists($code))
+                {
+                    $nonce = Authentic\Nonce::find($code);
+                    $nonce->delete();
+                }
 
-        // Kill remember cookies and other data
+                // Kill remember cookies and other data
+                $cookie = array(
+                    'name'   => $this->cookie_name,
+                    'value'  => '',
+                    'expire' => '',
+                );
+                $this->_ci->input->set_cookie($cookie);
+            }
+        }
         return TRUE;
     }
 
@@ -217,7 +259,7 @@ class Authentic {
      */
     public function logged_in($auto_login = NULL)
     {
-        if ($auto_login === NULL)
+        if (is_null($auto_login))
         {
             $auto_login = $this->allow_auto_login;
         }
@@ -276,6 +318,63 @@ class Authentic {
         return $this->_current_user; 
     }
 
+    // --------------------------------------------------------------------
+
+    /**
+     * set user session
+     *
+     * @access  private
+     * @param   object  $user       ActiveRecord User object
+     * @param   bool    $remember   toogle creating new nonce
+     *
+     * @return void
+     **/
+    private function set_session($user, $remember=FALSE)
+    {
+        $this->_ci->session->set_userdata('user_id', $user->id);
+        $this->add_message(lang('logged_in'));
+        if ( ! $remember)
+        {
+            return;
+        }
+
+        // create Nonce and save to cookie
+        $expire = date_create()->modify($this->cookie_length);
+        $attributes = array(
+            'user_id'   => $user->id,
+            'expire_at' => $expire
+        );
+        $nonce = Authentic\Nonce::create($attributes);
+
+        $cookie = array(
+            'name'   => $this->cookie_name,
+            'value'  => $nonce->code,
+            'expire' => $expire->format('U') - date_create()->format('U'),
+        );
+        $this->_ci->input->set_cookie($cookie);
+    }
+
+    // --------------------------------------------------------------------
+
+    /**
+     * use CI input library to get (prefixed) cookie
+     *
+     * @access  private
+     * @param   void
+     *
+     * @return string
+     **/
+    private function get_nonce_from_cookie()
+    {
+        $cookie = $this->cookie_name;
+        if ($prefix = $this->_ci->config->item('cookie_prefix'))
+        {
+            $cookie = $prefix . $cookie;
+        }
+
+        return $this->_ci->input->cookie($cookie);
+    }
+    
     // --------------------------------------------------------------------
 
     /**

@@ -46,6 +46,10 @@ class User extends \ActiveRecord\Model {
     // Associations
     // --------------------------------------------------------------------
 
+    static $has_many = array(
+        array('nonces', 'class_name' => 'Authentic\Nonce')
+    );
+
     // --------------------------------------------------------------------
     // Validations
     // --------------------------------------------------------------------
@@ -70,6 +74,70 @@ class User extends \ActiveRecord\Model {
     // --------------------------------------------------------------------
 
     /**
+     * set (unique) nonce property with expiration
+     *
+     * @access  public
+     * @param   object  $expire     DateTime object to expire nonce
+     *
+     * @return  void
+     **/
+    public function set_nonce($expire)
+    {
+        if (is_null($expire))
+        {
+            die('null');
+        }
+        die('not null');
+        if ( ! $expire instanceof \DateTime)
+        {
+            $expire = date_create()->modify('+1 week');
+        }
+
+        // create unique 32 character nonce
+        $nonce = substr($this->hash_value(microtime()), 0, 32);
+        $test = static::first(array('conditions'=>array(
+            'nonce = ?',
+            $nonce
+        )));
+        if ($test)
+        {
+            $this->nonce = $expire;
+            return;
+        }
+
+        $this->nonce_expire = $expire;
+        $this->assign_attribute('nonce', $nonce);
+    }
+
+    // --------------------------------------------------------------------
+
+    /**
+     * get remember_code property
+     *   generate and save if not present
+     *
+     * @access  public
+     * @param   void
+     *
+     * @return  void
+     **/
+    public function get_remember_code()
+    {
+        $code = $this->read_attribute('remember_code');
+        if ( ! $code)
+        {
+            $code = $this->hash_value(microtime());
+            $code = $this->remember_code = substr($code, 0, 32);
+            if ( ! $this->save())
+            {
+                // catch error
+            }
+        }
+        return $code;
+    }
+
+    // --------------------------------------------------------------------
+
+    /**
      * get (new) salt
      *
      * @access  public
@@ -80,7 +148,8 @@ class User extends \ActiveRecord\Model {
     public function get_salt()
     {
         $salt = $this->read_attribute('salt');
-        if ( ! $salt) {
+        if ( ! $salt)
+        {
             $salt = $this->salt = bin2hex(mcrypt_create_iv(32, MCRYPT_DEV_URANDOM));
         }
         return $salt;
@@ -100,7 +169,7 @@ class User extends \ActiveRecord\Model {
      * @param   bool    $return     switch return value
      *
      * @return  mixed   bool        (default)
-     *                  object      ActiveRecord $user object
+     *                  object      ActiveRecord user object
      **/
     public static function authenticate($identity, $password, $return = FALSE)
     {
@@ -114,6 +183,37 @@ class User extends \ActiveRecord\Model {
 
         return ($return) ? $user : TRUE;
     }
+
+
+    // --------------------------------------------------------------------
+
+    /**
+     * validate nonce and replace if valid
+     *
+     * @access  public
+     * @param   string  $nonce  nonce to check
+     *
+     * @return  mixed   object  ActiveRecord user object
+     *                  bool    FALSE if invalid
+     **/
+    //public function validate_nonce($nonce)
+    //{
+        //$user = User::first(array('conditions' => array(
+            //'nonce = ? AND nonce_expire > UTC_TIMESTAMP()',
+            //$nonce,
+        //)));
+        //if ( ! $user)
+        //{
+            //return FALSE;
+        //}
+        //$user->nonce = $user->hash_value(microtime());
+        //$user->nonce_expire = date_create()->modify('+1 week');
+        //if ( ! $user->save())
+        //{
+            //// catch error
+        //}
+        //return $user;
+    //}
 
     // --------------------------------------------------------------------
 
@@ -216,7 +316,8 @@ class User extends \ActiveRecord\Model {
      *
      * @return  string  encrypted 64 character string
      **/
-    protected function hash_value($value, $salt = NULL)
+    //protected function hash_value($value, $salt = NULL)
+    public function hash_value($value, $salt = NULL)
     {
         if ( ! $salt)
         {
@@ -256,4 +357,4 @@ class User extends \ActiveRecord\Model {
 }
 
 /* End of file User.php */
-/* Location: ./application/models/User.php */
+/* Location: ./models/User.php */
