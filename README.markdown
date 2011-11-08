@@ -60,15 +60,29 @@ set a config option to also delete 'remember me' cookies.
     $this->authentic->logout(TRUE);
 
 
-### Activate/Inactivate
-
-**FPO: basic working model, but needs work. will convert to use nonce entries.**
+### Activate/Deactivate
 
 You can get an activation code and set a user to inactive state. Inactive users 
 can not login by default (see configuration).
 
-    $code = $this->authentic->inactivate($identity);
-    $this->authentic->activate($identity, $code);
+    // identity can be user email, username, or id
+    $this->authentic->deactivate($identity);
+
+    // you can optionally request a activation code (default expiration)
+    $code = $this->authentic->deactivate($identity, TRUE);
+
+    // you can specify expiration length
+    $expire = date_create()->modify('+1 week');
+    $code = $this->authentic->deactivate($identity, TRUE, $expire);
+
+You can actiavte a user using a valid (non-expired) code or a user record object.
+
+    $user = get_user();
+    $this->authentic->activate($user);
+
+    // when using a code, you can optionally request the user object be returned
+    $code = $this->input->post('code');
+    $user = $this->authentic->activate($code, TRUE);
 
 
 ### Create Users
@@ -104,10 +118,15 @@ when loading, or via an **initialize()** method.
 
 ### Configuration options
 
+
 Should the library attempt to auto-login user when checking if user
 is currently logged in?
 
     $config['allow_auto_login'] = TRUE;
+
+Should the library allow inactive users to login?
+
+    $config['allow_inactive_login'] = FALSE;
 
 How long should 'remember me' cookies work? Accepts string formats
 supported by [DateTime::modify()](http://www.php.net/manual/datetime.modify.php).

@@ -31,9 +31,13 @@ class Authentic {
     protected $_messages = array();
 
     protected $allow_auto_login = TRUE;
+    protected $allow_inactive_login = FALSE;
     protected $cookie_length = '+10 days';
     protected $cookie_name = 'authenticRemember';
     protected $clear_remember = TRUE;
+    protected $deactive_length = '+2 hours';
+
+
 
     // --------------------------------------------------------------------
 
@@ -105,6 +109,13 @@ class Authentic {
             $this->add_error(lang('invalid_credentials'));
             return ($return) ? null : FALSE;
         }
+        
+        if ( ! $user->active && ! $this->allow_inactive_login)
+        {
+            $this->add_error(lang('inactive_user'));
+            return ($return) ? null : FALSE;
+        }
+
         $this->set_session($user, $remember);
         return ($return) ? $user : TRUE; 
     }
@@ -144,6 +155,12 @@ class Authentic {
 
             $this->add_error(lang('expired_cookie'));
             return FALSE;
+        }
+
+        if ( ! $nonce->user->active && ! $this->allow_inactive_login)
+        {
+            $this->add_error(lang('inactive_user'));
+            return ($return) ? null : FALSE;
         }
 
         $this->set_session($nonce->user, TRUE);
@@ -202,48 +219,107 @@ class Authentic {
      * set user to active status
      *
      * @access  public
-     * @param   mixed   $identity   (object) Authentic\User\ActiveRecord\Model
-     *                              (int) users.id
-     *                              (string) users.username
-     *                              (string) users.email
-     * @param   string  $identity   users.username or users.email
-     * @param   string  $code       users.activation_code
+     * @param   mixed   $identity   (object) Authentic\User
+     *                              (string) Authentic\Nonce.code
      * @param   bool    $return     switch to return user object
      *
      * @return  mixed   bool        (default)
-     *                  object      ActiveRecord $user object
+     *                  object      ActiveRecord User object
      **/
-    public function activate($identity, $code, $return = FALSE)
+    public function activate($identity, $return = FALSE)
     {
-        if ($identity instanceof ActiveRecord\Model)
+        if ( ! is_string($identity) && ! $identity instanceof User)
         {
-            $identity = $identity->id;
+            return FALSE;
         }
-        return Authentic\User::activate($identity, $code, $return);
+
+        // did we get a nonce code
+        if (is_string($identity))
+        {
+            if ( ! Authentic\Nonce::exists($identity))
+            {
+                return FALSE;
+            }
+
+            // get nonce and user, delete used nonce
+            $nonce = Authentic\Nonce::find($identity,
+                array('include'=>array('user'))
+            );
+            $nonce->delete();
+
+            // is nonce expired
+            if ($nonce->expire_at->format('U') < date_create()->format('U'))
+            {
+                $this->add_error(lang('expired_nonce'));
+                return FALSE;
+            }
+            
+            $user = $nonce->user;
+        }
+        else
+        {
+            $user = $identity;
+        }
+
+        $user->active = TRUE;
+        if ( ! $user->save())
+        {
+            // catch error
+        }
+
+        return ($return) ? $user : TRUE; 
     }
 
     // --------------------------------------------------------------------
 
     /**
      * set user to inactive status
+     * (optional) provide a nonce to reactivate
      *
      * @access  public
-     * @param   mixed   $identity   (object) Authentic\User\ActiveRecord\Model
+     * @param   mixed   $user       (object) Authentic\User
      *                              (int) users.id
      *                              (string) users.username
      *                              (string) users.email
+     * @param   bool    $code       should we return a nonce object
+     * @param   object  $expire     DateTime object to use for nonce.expire_at
      *
-     * @return  string  32 character activation code
+     * @return  mixed   bool        (default)
+     *                  object      ActiveRecord Nonce object
      **/
-    public function inactivate($identity)
+    public function deactivate($user, $code=FALSE, $expire=NULL)
     {
-        if ($identity instanceof ActiveRecord\Model)
+        if ( ! $user instanceof Authentic\User)
         {
-            $identity = $identity->id;
+            $user = Authentic\User::find_user($user);
         }
-        $user = Authentic\User::inactivate($identity, TRUE);
 
-        return ($user) ? $user->activation_code : FALSE;
+        if ( ! $user)
+        {
+            return FALSE;
+        }
+
+        $user->active = FALSE;
+        if ( ! $user->save())
+        {
+            // catch error
+        }
+
+        if ( ! $code)
+        {
+            return TRUE;
+        }
+
+        // create Nonce
+        if (is_null($expire) || ! $expire instanceof DateTime)
+        {
+            $expire = date_create()->modify($this->deactive_length);
+        }
+        $attributes = array(
+            'user_id'   => $user->id,
+            'expire_at' => $expire
+        );
+        return Authentic\Nonce::create($attributes);
     }
 
     // --------------------------------------------------------------------

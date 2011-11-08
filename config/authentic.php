@@ -14,6 +14,13 @@
 $config['allow_auto_login'] = TRUE;
 
 /**
+ * should the library allow inactive users to login
+ *
+ * @var bool
+ **/
+$config['allow_inactive_login'] = FALSE;
+
+/**
  * time 'remember me' cookie should persist
  *   accepts string formats supported by DateTime::modify()
  *
@@ -37,6 +44,15 @@ $config['cookie_name'] = 'authenticRemember';
  **/
 $config['clear_remember'] = TRUE;
 
+/**
+ * time until re-activate nonce expires
+ *   accepts string formats supported by DateTime::modify()
+ *
+ * @link http://www.php.net/manual/datetime.modify.php
+ *
+ * @var string
+ **/
+$config['deactive_length'] = '+2 hours';
 
 /* End of file authentic.php */
 /* Location: ./config/authentic.php */

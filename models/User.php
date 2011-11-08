@@ -74,32 +74,6 @@ class User extends \ActiveRecord\Model {
     // --------------------------------------------------------------------
 
     /**
-     * get remember_code property
-     *   generate and save if not present
-     *
-     * @access  public
-     * @param   void
-     *
-     * @return  void
-     **/
-    public function get_remember_code()
-    {
-        $code = $this->read_attribute('remember_code');
-        if ( ! $code)
-        {
-            $code = $this->hash_value(microtime());
-            $code = $this->remember_code = substr($code, 0, 32);
-            if ( ! $this->save())
-            {
-                // catch error
-            }
-        }
-        return $code;
-    }
-
-    // --------------------------------------------------------------------
-
-    /**
      * get (new) salt
      *
      * @access  public
@@ -143,71 +117,6 @@ class User extends \ActiveRecord\Model {
             return ($return) ? NULL : FALSE;
         }
 
-        return ($return) ? $user : TRUE;
-    }
-
-    // --------------------------------------------------------------------
-
-    /**
-     * mark user inactive, and set activation code
-     *
-     * @access  public
-     * @param   mixed   $identity   (int) users.id
-     *                              (string) users.username
-     *                              (string) users.email
-     *
-     * @return  mixed   bool        (default)
-     *                  object      ActiveRecord $user object
-     **/
-    public static function inactivate($identity, $return = FALSE)
-    {
-        $user = static::find_user($identity);
-        if ( ! $user)
-        {
-            return ($return) ? NULL : TRUE;
-        }
-
-        $user->assign_attribute('active', FALSE);
-        $code = $user->hash_value(microtime());
-        $user->activation_code = substr($code, 0, 32);
-
-        if ( ! $user->save())
-        {
-            // catch error
-        }
-        return ($return) ? $user : TRUE;
-    }
-
-    // --------------------------------------------------------------------
-
-    /**
-     * validate code and mark user active
-     *
-     * @access  public
-     * @param   mixed   $identity   (int) users.id
-     *                              (string) users.username
-     *                              (string) users.email
-     * @param   string  $code       users.activation_code
-     * @param   bool    $return     switch return value
-     *
-     * @return  mixed   bool        (default)
-     *                  object      ActiveRecord $user object
-     **/
-    public static function activate($identity, $code, $return = FALSE)
-    {
-        $user = static::find_user($identity);
-        if ($user->activation_code !== $code)
-        {
-            return ($return) ? FALSE : NULL;
-        }
-
-        $user->assign_attribute('active', TRUE);
-        $user->activation_code = NULL;
-
-        if ( ! $user->save())
-        {
-            // catch error
-        }
         return ($return) ? $user : TRUE;
     }
 
