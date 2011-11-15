@@ -110,9 +110,15 @@ class User extends \ActiveRecord\Model {
     public static function authenticate($identity, $password, $return = FALSE)
     {
         $user = static::find_user($identity, FALSE);
+
+        if ( ! $user)
+        {
+            return ($return) ? NULL : FALSE;
+        }
+
         $hash = static::hash_value($password, $user->salt);
 
-        if ( ! $user OR $user->password !== $hash)
+        if ($user->password !== $hash)
         {
             return ($return) ? NULL : FALSE;
         }
