@@ -12,6 +12,7 @@ if ( ! defined('BASEPATH')) exit('No direct script access allowed');
  * @category    Authentication
  * @author      Topic Deisgn
  * @link        https://github.com/topicdesign/codeigniter-authentic-authentication
+ * @license     http://creativecommons.org/licenses/BSD/
  */
 
 /**
@@ -26,7 +27,6 @@ if ( ! defined('BASEPATH')) exit('No direct script access allowed');
  *                  ORM.  Allows for various meta tables, easily extendible.
  *
  */
-
 
 class User extends \ActiveRecord\Model {
 
@@ -201,6 +201,22 @@ class User extends \ActiveRecord\Model {
     // --------------------------------------------------------------------
 
 }
+/**
+ * SQL for table
 
+CREATE TABLE `users` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `email` varchar(120) DEFAULT NULL,
+  `username` varchar(60) DEFAULT NULL,
+  `password` char(64) DEFAULT NULL,
+  `salt` char(64) DEFAULT NULL,
+  `active` tinyint(1) DEFAULT '0',
+  `last_login` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+
+**/
 /* End of file User.php */
 /* Location: ./models/User.php */
