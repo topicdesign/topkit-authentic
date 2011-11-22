@@ -46,5 +46,26 @@ if ( ! function_exists('get_user'))
 
 // ------------------------------------------------------------------------
 
+/**
+ * check to see if there is a logged in user
+ *
+ * @access public
+ * @param  void
+ *
+ * @return bool
+ **/
+if ( ! function_exists('logged_in'))
+{
+    function logged_in()
+    {
+        $user = get_user();
+        if ($user->id) 
+        {
+            return TRUE;
+        }
+        return FALSE;
+    }
+}
+
 /* End of file authentic_helper.php */
 /* Location: ./helpers/authentic_helper.php */
