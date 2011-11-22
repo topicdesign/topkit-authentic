@@ -56,14 +56,11 @@ if ( ! function_exists('get_user'))
  **/
 if ( ! function_exists('logged_in'))
 {
-    function logged_in()
+    function logged_in($auto_login = NULL)
     {
-        $user = get_user();
-        if ($user->id) 
-        {
-            return TRUE;
-        }
-        return FALSE;
+        $CI = get_instance();
+        $CI->load->library('authentic');
+        return $CI->authentic->logged_in($auto_login);
     }
 }
 
