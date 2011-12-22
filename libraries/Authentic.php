@@ -253,8 +253,8 @@ class Authentic {
                 $this->add_error(lang('expired_nonce'));
                 return FALSE;
             }
-            
-            $user = $nonce->user;
+            // nonce->user is read only, get new instance
+            $user = User::find($nonce->user->id);
         }
         else
         {
@@ -399,13 +399,13 @@ class Authentic {
     /**
      * set user session
      *
-     * @access  private
+     * @access  public
      * @param   object  $user       ActiveRecord User object
      * @param   bool    $remember   toogle creating new nonce
      *
      * @return void
      **/
-    private function set_session($user, $remember=FALSE)
+    public function set_session($user, $remember=FALSE)
     {
         $this->_ci->session->set_userdata('user_id', $user->id);
         $this->add_message(lang('logged_in'));
