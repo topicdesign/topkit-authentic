@@ -291,7 +291,7 @@ class Authentic {
     {
         if ( ! $user instanceof Authentic\User)
         {
-            $user = Authentic\User::find_user($user);
+            $user = Authentic\User::find_user($user, TRUE);
         }
 
         if ( ! $user)

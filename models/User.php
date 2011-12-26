@@ -54,6 +54,26 @@ class User extends \ActiveRecord\Model {
     // Validations
     // --------------------------------------------------------------------
 
+    static $validates_presence_of = array(
+        array('email')
+    );
+
+    /**
+     * custom validation
+     *
+     * @access  public 
+     * @param   void
+     *
+     * @return  void
+     **/
+    public function validate()
+    {
+        if ( ! filter_var($this->email, FILTER_VALIDATE_EMAIL))
+        {
+            $this->errors->add('email', "must be a valid email address");
+        }
+    }
+
     // --------------------------------------------------------------------
     // Setters/Getters
     // --------------------------------------------------------------------
