@@ -42,6 +42,8 @@ class User extends \ActiveRecord\Model {
     # explicit database name 
     //static $db = '';
 
+    static $before_validation_on_create = array('generate_username');
+    
     // --------------------------------------------------------------------
     // Associations
     // --------------------------------------------------------------------
@@ -55,7 +57,23 @@ class User extends \ActiveRecord\Model {
     // --------------------------------------------------------------------
 
     static $validates_presence_of = array(
-        array('email')
+        array('email'),
+        array('username'),
+        array('password')
+    );
+    
+    // --------------------------------------------------------------------
+    
+    static $validates_uniqueness_of = array(
+        array('email'),
+        array('username')
+    );
+    
+    // --------------------------------------------------------------------
+
+    static $validates_length_of = array(
+        array('email', 'maximum' => 120),
+        array('username', 'maximum' => 60)
     );
 
     /**
@@ -216,6 +234,35 @@ class User extends \ActiveRecord\Model {
         {
             return (filter_var($identity, FILTER_VALIDATE_EMAIL)) ? 'email' : 'username';
         }
+    }
+    
+    // --------------------------------------------------------------------
+
+    public function generate_username()
+    {
+        if ($this->username) 
+        {
+            die('here');
+            return TRUE;
+        }
+        $username = array_shift(explode('@',$this->email));
+        $options = array(
+            'conditions' => array("username LIKE '$username%'")
+        );
+        $result = self::all($options);
+        $names = array();
+        foreach ($result as $user)
+        {   
+            $names[] = $user->username; 
+        }
+        $i = 1;
+        $try = $username;
+        while (array_search($try,$names) > -1)
+        {
+            $try = sprintf('%s%02s',$username,$i);
+            $i++;
+        }
+        $this->username = $try;
     }
 
     // --------------------------------------------------------------------

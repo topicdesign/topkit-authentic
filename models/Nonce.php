@@ -41,6 +41,23 @@ class Nonce extends \ActiveRecord\Model {
     // Validations
     // --------------------------------------------------------------------
     
+    static $validates_uniqueness_of = array(
+        array('code')
+    );
+    
+    // --------------------------------------------------------------------
+    
+    static $validates_presence_of = array(
+        array('code'),
+        array('user_id')
+    );
+    
+    // --------------------------------------------------------------------
+
+    static $validates_length_of = array(
+        array('code', 'is' => 32)
+    );
+    
     // --------------------------------------------------------------------
     // Public Methods
     // --------------------------------------------------------------------
