@@ -242,7 +242,6 @@ class User extends \ActiveRecord\Model {
     {
         if ($this->username) 
         {
-            die('here');
             return TRUE;
         }
         $username = array_shift(explode('@',$this->email));
