@@ -68,6 +68,13 @@ class User extends \ActiveRecord\Model {
         array('email'),
         array('username')
     );
+    
+    // --------------------------------------------------------------------
+
+    static $validates_length_of = array(
+        array('email', 'maximum' => 120),
+        array('username', 'maximum' => 60)
+    );
 
     /**
      * custom validation
