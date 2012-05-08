@@ -228,7 +228,7 @@ class Authentic {
      **/
     public function activate($identity, $return = FALSE)
     {
-        if ( ! is_string($identity) && ! $identity instanceof User)
+        if ( ! is_string($identity) && ! $identity instanceof Authentic\User)
         {
             return FALSE;
         }
@@ -254,7 +254,7 @@ class Authentic {
                 return FALSE;
             }
             // nonce->user is read only, get new instance
-            $user = User::find($nonce->user->id);
+            $user = Authentic\User::find($nonce->user->id);
         }
         else
         {
