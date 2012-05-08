@@ -261,7 +261,7 @@ class Authentic {
             $user = $identity;
         }
 
-        $user->active = TRUE;
+        $user->active = 1;
         if ( ! $user->save())
         {
             // catch error
