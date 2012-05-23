@@ -7,6 +7,7 @@
  * @category    Authentication
  * @author      Topic Deisgn
  * @link        https://github.com/topicdesign/codeigniter-authentic-authentication
+ * @version     0.0.4
  */
 
 /**
