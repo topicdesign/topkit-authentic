@@ -15,19 +15,19 @@ if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 class Nonce extends \ActiveRecord\Model {
 
-    # explicit table name  
-    //static $table_name = 'nonces';
+    # explicit table name
+    static $table_name = 'nonces';
 
-    # explicit pk 
+    # explicit pk
     static $primary_key = 'code';
 
-    # explicit connection name 
+    # explicit connection name
     //static $connection = 'default';
 
-    # explicit database name 
+    # explicit database name
     //static $db = '';
 
-    static $before_create = array('generate_code');
+    static $before_validation_on_create = array('generate_code');
 
     // --------------------------------------------------------------------
     // Associations
@@ -40,24 +40,24 @@ class Nonce extends \ActiveRecord\Model {
     // --------------------------------------------------------------------
     // Validations
     // --------------------------------------------------------------------
-    
+
     static $validates_uniqueness_of = array(
         array('code')
     );
-    
+
     // --------------------------------------------------------------------
-    
+
     static $validates_presence_of = array(
         array('code'),
         array('user_id')
     );
-    
+
     // --------------------------------------------------------------------
 
     static $validates_length_of = array(
         array('code', 'is' => 32)
     );
-    
+
     // --------------------------------------------------------------------
     // Public Methods
     // --------------------------------------------------------------------
@@ -82,8 +82,6 @@ class Nonce extends \ActiveRecord\Model {
     // --------------------------------------------------------------------
     // Private/Protected Methods
     // --------------------------------------------------------------------
-
-    
 
     // --------------------------------------------------------------------
 }
